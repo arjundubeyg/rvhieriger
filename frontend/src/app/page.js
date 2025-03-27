@@ -67,7 +67,7 @@ const VideoChatApp = () => {
     }
 
     // connect to server
-    socketRef.current = io('https://server-vid-chat.onrender.com/');
+    socketRef.current = io('https://rvhieriger-1.onrender.com');
 
     // disconnection event
     socketRef.current.on('disconnected', () => {
