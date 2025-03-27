@@ -1,6 +1,8 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import { Server as SocketIOServer } from 'socket.io';
+import { Server } from 'socket.io';
+import { Socket } from 'socket.io';
 import { handelStart, handelDisconnect, getType } from './lib';
 import { GetTypesResult, room } from './types';
 
@@ -8,12 +10,12 @@ const app: Application = express();
 app.use(cors());
 
 const server = app.listen(8000, () => console.log('Server is up, 8000'));
-const io = new SocketIOServer(server, { cors: { origin: '*' } });
+const io: Server = new SocketIOServer(server, { cors: { origin: '*' } });
 
 let online: number = 0;
 let roomArr: Array<room> = [];
 
-io.on('connection', (socket) => {
+io.on('connection', (socket: Socket) => {
   online++;
   io.emit('online', online);
 
@@ -32,7 +34,7 @@ io.on('connection', (socket) => {
   /// ------- logic for webrtc connection ------
 
   // on ice send
-  socket.on('ice:send', ({ candidate }: { candidate: RTCIceCandidate }) => {
+  socket.on('ice:send', ({ candidate }: { candidate: any }) => {
     let type: GetTypesResult = getType(socket.id, roomArr);
     if (type) {
       if (type?.type == 'p1') {
@@ -47,7 +49,7 @@ io.on('connection', (socket) => {
   });
 
   // on sdp send
-  socket.on('sdp:send', ({ sdp }: { sdp: RTCSessionDescription }) => {
+  socket.on('sdp:send', ({ sdp }: { sdp: any }) => {
     let type = getType(socket.id, roomArr);
     if (type) {
       if (type?.type == 'p1') {
