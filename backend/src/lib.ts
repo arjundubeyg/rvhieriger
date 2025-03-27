@@ -1,8 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
 import { GetTypesResult, room } from './types';
+import { Socket, Server } from 'socket.io';
 
-export function handelStart(roomArr: Array<room>, socket: any, cb: Function, io: any): void {
-
+export function handelStart(
+  roomArr: Array<room>, 
+  socket: Socket, 
+  cb: (type: string) => void, 
+  io: Server
+): void {
   // check available rooms
   let availableroom = checkAvailableRoom();
   if (availableroom.is) {
@@ -10,7 +15,10 @@ export function handelStart(roomArr: Array<room>, socket: any, cb: Function, io:
     cb('p2');
     closeRoom(availableroom.roomid);
     if (availableroom?.room) {
-      io.to(availableroom.room.p1.id).emit('remote-socket', socket.id);
+      // Add null check before emitting
+      if (availableroom.room.p1.id) {
+        io.to(availableroom.room.p1.id).emit('remote-socket', socket.id);
+      }
       socket.emit('remote-socket', availableroom.room.p1.id);
       socket.emit('roomid', availableroom.room.roomid);
     }
@@ -33,15 +41,9 @@ export function handelStart(roomArr: Array<room>, socket: any, cb: Function, io:
     socket.emit('roomid', roomid);
   }
 
-
-
-
   /**
-   * 
-   * @param roomid 
-   * @desc search though roomArr and 
-   * make isAvailable false, also se p2.id 
-   * socket.id
+   * Close the room by setting isAvailable to false and setting p2 id
+   * @param roomid - The ID of the room to close
    */
   function closeRoom(roomid: string): void {
     for (let i = 0; i < roomArr.length; i++) {
@@ -53,13 +55,9 @@ export function handelStart(roomArr: Array<room>, socket: any, cb: Function, io:
     }
   }
 
-
   /**
-   * 
-   * @returns Object {is, roomid, room}
-   * is -> true if foom is available
-   * roomid -> id of the room, could be empth
-   * room -> the roomArray, could be empty 
+   * Check for available rooms
+   * @returns Object with room availability information
    */
   function checkAvailableRoom(): { is: boolean, roomid: string, room: room | null } {
     for (let i = 0; i < roomArr.length; i++) {
@@ -76,12 +74,22 @@ export function handelStart(roomArr: Array<room>, socket: any, cb: Function, io:
 }
 
 /**
- * @desc handels disconnceition event
+ * Handle disconnection event
+ * @param disconnectedId - Socket ID of the disconnected client
+ * @param roomArr - Array of rooms
+ * @param io - Socket.IO server instance
  */
-export function handelDisconnect(disconnectedId: string, roomArr: Array<room>, io: any) {
+export function handelDisconnect(
+  disconnectedId: string, 
+  roomArr: Array<room>, 
+  io: Server
+): void {
   for (let i = 0; i < roomArr.length; i++) {
     if (roomArr[i].p1.id == disconnectedId) {
-      io.to(roomArr[i].p2.id).emit("disconnected");
+      // Add null check before emitting
+      if (roomArr[i].p2.id) {
+        io.to(roomArr[i].p2.id!).emit("disconnected");
+      }
       if (roomArr[i].p2.id) {
         roomArr[i].isAvailable = true;
         roomArr[i].p1.id = roomArr[i].p2.id;
@@ -91,7 +99,10 @@ export function handelDisconnect(disconnectedId: string, roomArr: Array<room>, i
         roomArr.splice(i, 1);
       }
     } else if (roomArr[i].p2.id == disconnectedId) {
-      io.to(roomArr[i].p1.id).emit("disconnected");
+      // Add null check before emitting
+      if (roomArr[i].p1.id) {
+        io.to(roomArr[i].p1.id!).emit("disconnected");
+      }
       if (roomArr[i].p1.id) {
         roomArr[i].isAvailable = true;
         roomArr[i].p2.id = null;
@@ -103,8 +114,12 @@ export function handelDisconnect(disconnectedId: string, roomArr: Array<room>, i
   }
 }
 
-
-// get type of person (p1 or p2)
+/**
+ * Get the type of participant (p1 or p2)
+ * @param id - Socket ID to check
+ * @param roomArr - Array of rooms
+ * @returns Participant type information
+ */
 export function getType(id: string, roomArr: Array<room>): GetTypesResult {
   for (let i = 0; i < roomArr.length; i++) {
     if (roomArr[i].p1.id == id) {

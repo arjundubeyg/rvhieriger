@@ -1,12 +1,14 @@
-import express from 'express';
-const app = express();
+import express, { Application } from 'express';
 import cors from 'cors';
-app.use(cors());
-import { Server } from 'socket.io';
-const server = app.listen('8000', () => console.log('Server is up, 8000'));
-const io = new Server(server, { cors: { origin: '*' } });
+import { Server as SocketIOServer } from 'socket.io';
 import { handelStart, handelDisconnect, getType } from './lib';
 import { GetTypesResult, room } from './types';
+
+const app: Application = express();
+app.use(cors());
+
+const server = app.listen(8000, () => console.log('Server is up, 8000'));
+const io = new SocketIOServer(server, { cors: { origin: '*' } });
 
 let online: number = 0;
 let roomArr: Array<room> = [];
@@ -16,9 +18,9 @@ io.on('connection', (socket) => {
   io.emit('online', online);
 
   // on start
-  socket.on('start', cb => {
+  socket.on('start', (cb: (type: string) => void) => {
     handelStart(roomArr, socket, cb, io);
-  })
+  });
 
   // On disconnection
   socket.on('disconnect', () => {
@@ -27,13 +29,10 @@ io.on('connection', (socket) => {
     handelDisconnect(socket.id, roomArr, io);
   });
 
-
-
-
   /// ------- logic for webrtc connection ------
 
   // on ice send
-  socket.on('ice:send', ({ candidate }) => {
+  socket.on('ice:send', ({ candidate }: { candidate: RTCIceCandidate }) => {
     let type: GetTypesResult = getType(socket.id, roomArr);
     if (type) {
       if (type?.type == 'p1') {
@@ -48,7 +47,7 @@ io.on('connection', (socket) => {
   });
 
   // on sdp send
-  socket.on('sdp:send', ({ sdp }) => {
+  socket.on('sdp:send', ({ sdp }: { sdp: RTCSessionDescription }) => {
     let type = getType(socket.id, roomArr);
     if (type) {
       if (type?.type == 'p1') {
@@ -60,17 +59,17 @@ io.on('connection', (socket) => {
           && io.to(type.p1id).emit('sdp:reply', { sdp, from: socket.id });
       }
     }
-  })
-
-
+  });
 
   /// --------- Messages -----------
 
   // send message
-  socket.on("send-message", (input, type, roomid) => {
-    if (type == 'p1') type = 'You: ';
-    else if (type == 'p2') type = 'Stranger: ';
-    socket.to(roomid).emit('get-message', input, type);
-  })
-
+  socket.on("send-message", (input: string, type: 'p1' | 'p2', roomid: string) => {
+    let displayType: string;
+    if (type == 'p1') displayType = 'You: ';
+    else if (type == 'p2') displayType = 'Stranger: ';
+    else displayType = '';
+    
+    socket.to(roomid).emit('get-message', input, displayType);
+  });
 });
