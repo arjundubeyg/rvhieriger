@@ -1,13 +1,13 @@
-import { v4 as uuidv4 } from 'uuid';
-import { GetTypesResult, room } from './types';
-import { Socket, Server } from 'socket.io';
+const { v4: uuidv4 } = require('uuid');
 
-export function handelStart(
-  roomArr: Array<room>, 
-  socket: Socket, 
-  cb: (type: string) => void, 
-  io: Server
-): void {
+/**
+ * Handle start of a connection
+ * @param {Array} roomArr 
+ * @param {Object} socket 
+ * @param {Function} cb 
+ * @param {Object} io 
+ */
+function handelStart(roomArr, socket, cb, io) {
   // check available rooms
   let availableroom = checkAvailableRoom();
   if (availableroom.is) {
@@ -15,10 +15,7 @@ export function handelStart(
     cb('p2');
     closeRoom(availableroom.roomid);
     if (availableroom?.room) {
-      // Add null check before emitting
-      if (availableroom.room.p1.id) {
-        io.to(availableroom.room.p1.id).emit('remote-socket', socket.id);
-      }
+      io.to(availableroom.room.p1.id).emit('remote-socket', socket.id);
       socket.emit('remote-socket', availableroom.room.p1.id);
       socket.emit('roomid', availableroom.room.roomid);
     }
@@ -42,10 +39,10 @@ export function handelStart(
   }
 
   /**
-   * Close the room by setting isAvailable to false and setting p2 id
-   * @param roomid - The ID of the room to close
+   * Close a room by marking it unavailable and setting p2 id
+   * @param {string} roomid 
    */
-  function closeRoom(roomid: string): void {
+  function closeRoom(roomid) {
     for (let i = 0; i < roomArr.length; i++) {
       if (roomArr[i].roomid == roomid) {
         roomArr[i].isAvailable = false;
@@ -57,9 +54,9 @@ export function handelStart(
 
   /**
    * Check for available rooms
-   * @returns Object with room availability information
+   * @returns {Object} Room availability information
    */
-  function checkAvailableRoom(): { is: boolean, roomid: string, room: room | null } {
+  function checkAvailableRoom() {
     for (let i = 0; i < roomArr.length; i++) {
       if (roomArr[i].isAvailable) {
         return { is: true, roomid: roomArr[i].roomid, room: roomArr[i] };
@@ -75,21 +72,14 @@ export function handelStart(
 
 /**
  * Handle disconnection event
- * @param disconnectedId - Socket ID of the disconnected client
- * @param roomArr - Array of rooms
- * @param io - Socket.IO server instance
+ * @param {string} disconnectedId 
+ * @param {Array} roomArr 
+ * @param {Object} io 
  */
-export function handelDisconnect(
-  disconnectedId: string, 
-  roomArr: Array<room>, 
-  io: Server
-): void {
+function handelDisconnect(disconnectedId, roomArr, io) {
   for (let i = 0; i < roomArr.length; i++) {
     if (roomArr[i].p1.id == disconnectedId) {
-      // Add null check before emitting
-      if (roomArr[i].p2.id) {
-        io.to(roomArr[i].p2.id!).emit("disconnected");
-      }
+      io.to(roomArr[i].p2.id).emit("disconnected");
       if (roomArr[i].p2.id) {
         roomArr[i].isAvailable = true;
         roomArr[i].p1.id = roomArr[i].p2.id;
@@ -99,10 +89,7 @@ export function handelDisconnect(
         roomArr.splice(i, 1);
       }
     } else if (roomArr[i].p2.id == disconnectedId) {
-      // Add null check before emitting
-      if (roomArr[i].p1.id) {
-        io.to(roomArr[i].p1.id!).emit("disconnected");
-      }
+      io.to(roomArr[i].p1.id).emit("disconnected");
       if (roomArr[i].p1.id) {
         roomArr[i].isAvailable = true;
         roomArr[i].p2.id = null;
@@ -115,12 +102,12 @@ export function handelDisconnect(
 }
 
 /**
- * Get the type of participant (p1 or p2)
- * @param id - Socket ID to check
- * @param roomArr - Array of rooms
- * @returns Participant type information
+ * Get the type of person (p1 or p2)
+ * @param {string} id 
+ * @param {Array} roomArr 
+ * @returns {Object|boolean} 
  */
-export function getType(id: string, roomArr: Array<room>): GetTypesResult {
+function getType(id, roomArr) {
   for (let i = 0; i < roomArr.length; i++) {
     if (roomArr[i].p1.id == id) {
         return { type: 'p1', p2id: roomArr[i].p2.id };
@@ -131,3 +118,9 @@ export function getType(id: string, roomArr: Array<room>): GetTypesResult {
 
   return false;
 }
+
+module.exports = {
+  handelStart,
+  handelDisconnect,
+  getType
+};
