@@ -58,10 +58,13 @@ io.on('connection', (socket) => {
     /// --------- Messages -----------
     // send message
     socket.on("send-message", (input, type, roomid) => {
+        let displayType;
         if (type == 'p1')
-            type = 'You: ';
+            displayType = 'You: ';
         else if (type == 'p2')
-            type = 'Stranger: ';
-        socket.to(roomid).emit('get-message', input, type);
+            displayType = 'Stranger: ';
+        else
+            displayType = '';
+        socket.to(roomid).emit('get-message', input, displayType);
     });
 });

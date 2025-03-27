@@ -12,7 +12,10 @@ function handelStart(roomArr, socket, cb, io) {
         cb('p2');
         closeRoom(availableroom.roomid);
         if (availableroom?.room) {
-            io.to(availableroom.room.p1.id).emit('remote-socket', socket.id);
+            // Add null check before emitting
+            if (availableroom.room.p1.id) {
+                io.to(availableroom.room.p1.id).emit('remote-socket', socket.id);
+            }
             socket.emit('remote-socket', availableroom.room.p1.id);
             socket.emit('roomid', availableroom.room.roomid);
         }
@@ -72,7 +75,10 @@ function handelStart(roomArr, socket, cb, io) {
 function handelDisconnect(disconnectedId, roomArr, io) {
     for (let i = 0; i < roomArr.length; i++) {
         if (roomArr[i].p1.id == disconnectedId) {
-            io.to(roomArr[i].p2.id).emit("disconnected");
+            // Add null check before emitting
+            if (roomArr[i].p2.id) {
+                io.to(roomArr[i].p2.id).emit("disconnected");
+            }
             if (roomArr[i].p2.id) {
                 roomArr[i].isAvailable = true;
                 roomArr[i].p1.id = roomArr[i].p2.id;
@@ -83,7 +89,10 @@ function handelDisconnect(disconnectedId, roomArr, io) {
             }
         }
         else if (roomArr[i].p2.id == disconnectedId) {
-            io.to(roomArr[i].p1.id).emit("disconnected");
+            // Add null check before emitting
+            if (roomArr[i].p1.id) {
+                io.to(roomArr[i].p1.id).emit("disconnected");
+            }
             if (roomArr[i].p1.id) {
                 roomArr[i].isAvailable = true;
                 roomArr[i].p2.id = null;
