@@ -31,12 +31,12 @@ io.on('connection', (socket) => {
     socket.on('ice:send', ({ candidate }) => {
         let type = (0, lib_1.getType)(socket.id, roomArr);
         if (type) {
-            if (type?.type == 'p1') {
-                typeof (type?.p2id) == 'string'
+            if ((type === null || type === void 0 ? void 0 : type.type) == 'p1') {
+                typeof (type === null || type === void 0 ? void 0 : type.p2id) == 'string'
                     && io.to(type.p2id).emit('ice:reply', { candidate, from: socket.id });
             }
-            else if (type?.type == 'p2') {
-                typeof (type?.p1id) == 'string'
+            else if ((type === null || type === void 0 ? void 0 : type.type) == 'p2') {
+                typeof (type === null || type === void 0 ? void 0 : type.p1id) == 'string'
                     && io.to(type.p1id).emit('ice:reply', { candidate, from: socket.id });
             }
         }
@@ -45,12 +45,12 @@ io.on('connection', (socket) => {
     socket.on('sdp:send', ({ sdp }) => {
         let type = (0, lib_1.getType)(socket.id, roomArr);
         if (type) {
-            if (type?.type == 'p1') {
-                typeof (type?.p2id) == 'string'
+            if ((type === null || type === void 0 ? void 0 : type.type) == 'p1') {
+                typeof (type === null || type === void 0 ? void 0 : type.p2id) == 'string'
                     && io.to(type.p2id).emit('sdp:reply', { sdp, from: socket.id });
             }
-            if (type?.type == 'p2') {
-                typeof (type?.p1id) == 'string'
+            if ((type === null || type === void 0 ? void 0 : type.type) == 'p2') {
+                typeof (type === null || type === void 0 ? void 0 : type.p1id) == 'string'
                     && io.to(type.p1id).emit('sdp:reply', { sdp, from: socket.id });
             }
         }

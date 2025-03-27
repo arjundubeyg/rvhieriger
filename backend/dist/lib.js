@@ -11,7 +11,7 @@ function handelStart(roomArr, socket, cb, io) {
         socket.join(availableroom.roomid);
         cb('p2');
         closeRoom(availableroom.roomid);
-        if (availableroom?.room) {
+        if (availableroom === null || availableroom === void 0 ? void 0 : availableroom.room) {
             // Add null check before emitting
             if (availableroom.room.p1.id) {
                 io.to(availableroom.room.p1.id).emit('remote-socket', socket.id);
