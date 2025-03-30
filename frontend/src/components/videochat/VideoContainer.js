@@ -17,7 +17,7 @@ const VideoContainer = ({ strangerVideoRef, myVideoRef }) => {
           ref={myVideoRef}
           autoPlay 
           id="my-video" 
-          className="rounded-full object-cover border-2 border-violet-500 w-full h-full"
+          className="rounded-full object-cover border-2 border-blue-500 w-full h-full"
         ></video>
       </div>
     </div>

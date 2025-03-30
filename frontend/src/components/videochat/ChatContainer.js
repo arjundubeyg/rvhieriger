@@ -24,12 +24,12 @@ const ChatContainer = ({
           ref={inputRef}
           type="text" 
           placeholder='Type your message here..' 
-          className="flex-grow p-2 rounded-[15px] text-sm outline outline-2 outline-violet-500"
+          className="flex-grow p-2 rounded-[15px] text-sm outline outline-2 outline-blue-500"
         />
         <button 
           ref={buttonRef}
           id="send"
-          className="text-sm px-4 py-2 font-bold text-white bg-blueviolet rounded-[10px] outline outline-2 outline-violet-500"
+          className="text-sm px-4 py-2 font-bold text-white bg-blueblue rounded-[10px] outline outline-2 outline-blue-500"
           onClick={handleSendMessage}
         >
           Send
